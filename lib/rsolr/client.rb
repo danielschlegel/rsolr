@@ -1,9 +1,10 @@
 class RSolr::Client
   
-  attr_reader :connection, :uri, :proxy, :options
+  attr_reader :connection, :uri, :proxy, :options, :auth
   
   def initialize connection, options = {}
     @proxy = @uri = nil
+    @auth = options[:auth] if options[:auth]
     @connection = connection
     unless false === options[:url]
       url = options[:url] ? options[:url].dup : 'http://127.0.0.1:8983/solr/'
@@ -33,7 +34,7 @@ class RSolr::Client
   %W(get post head).each do |meth|
     class_eval <<-RUBY
     def #{meth} path, opts = {}, &block
-      send_and_receive path, opts.merge(:method => :#{meth}), &block
+      send_and_receive path, opts.merge(@auth).merge(:method => :#{meth}), &block
     end
     RUBY
   end
@@ -142,7 +143,7 @@ class RSolr::Client
   # "opts" : A hash, which can contain the following keys:
   #   :method : required - the http method (:get, :post or :head)
   #   :params : optional - the query string params in hash form
-  #   :data : optional - post data -- if a hash is given, it's sent as "application/x-www-form-urlencoded; charset=UTF-8"
+  #   :data : optional - post data -- if a hash is given, it's sent as "application/x-www-form-urlencoded"
   #   :headers : optional - hash of request headers
   # All other options are passed right along to the connection's +send_and_receive+ method (:get, :post, or :head)
   # 
@@ -155,7 +156,6 @@ class RSolr::Client
   # then passes the request/response into +adapt_response+.
   def send_and_receive path, opts
     request_context = build_request path, opts
-    request_context[:read_timeout] = @options[:read_timeout]
     execute request_context
   end
   
@@ -191,9 +191,10 @@ class RSolr::Client
     if opts[:data].is_a? Hash
       opts[:data] = RSolr::Uri.params_to_solr opts[:data]
       opts[:headers] ||= {}
-      opts[:headers]['Content-Type'] ||= 'application/x-www-form-urlencoded; charset=UTF-8'
+      opts[:headers]['Content-Type'] ||= 'application/x-www-form-urlencoded'
     end
     opts[:path] = path
+    opts[:auth] = @options[:auth] if @options[:auth]
     opts[:uri] = base_uri.merge(path.to_s + (query ? "?#{query}" : "")) if base_uri
     opts
   end

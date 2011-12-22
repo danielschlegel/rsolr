@@ -15,7 +15,7 @@ describe "RSolr::Connection" do
   context "read timeout configuration" do
     let(:client) { mock.as_null_object }
 
-    subject { RSolr::Connection.new } 
+    subject { RSolr::Connection.new }
 
     it "should configure Net:HTTP read_timeout" do
       subject.execute client, {:uri => URI.parse("http://localhost/some_uri"), :method => :get, :read_timeout => 42}
@@ -29,5 +29,5 @@ describe "RSolr::Connection" do
       http.read_timeout.should == 60
     end
   end
-  
+
 end

@@ -11,6 +11,8 @@ class RSolr::Connection
     h = http request_context[:uri], request_context[:proxy], request_context[:read_timeout]
     request = setup_raw_request request_context
     request.body = request_context[:data] if request_context[:method] == :post and request_context[:data]
+    request.basic_auth(request_context[:auth][:user], request_context[:auth][:password]) if request_context[:auth] and request_context[:auth][:user] and request_context[:auth][:password]
+
     begin
       response = h.request request
       charset = response.type_params["charset"]
