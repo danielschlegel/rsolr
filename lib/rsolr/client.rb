@@ -34,7 +34,8 @@ class RSolr::Client
   %W(get post head).each do |meth|
     class_eval <<-RUBY
     def #{meth} path, opts = {}, &block
-      send_and_receive path, opts.merge(@auth).merge(:method => :#{meth}), &block
+      opts.merge!(@auth) if @auth
+      send_and_receive path, opts.merge(:method => :#{meth}), &block
     end
     RUBY
   end
@@ -143,7 +144,7 @@ class RSolr::Client
   # "opts" : A hash, which can contain the following keys:
   #   :method : required - the http method (:get, :post or :head)
   #   :params : optional - the query string params in hash form
-  #   :data : optional - post data -- if a hash is given, it's sent as "application/x-www-form-urlencoded"
+  #   :data : optional - post data -- if a hash is given, it's sent as "application/x-www-form-urlencoded; charset=UTF-8"
   #   :headers : optional - hash of request headers
   # All other options are passed right along to the connection's +send_and_receive+ method (:get, :post, or :head)
   # 
@@ -191,7 +192,7 @@ class RSolr::Client
     if opts[:data].is_a? Hash
       opts[:data] = RSolr::Uri.params_to_solr opts[:data]
       opts[:headers] ||= {}
-      opts[:headers]['Content-Type'] ||= 'application/x-www-form-urlencoded'
+      opts[:headers]['Content-Type'] ||= 'application/x-www-form-urlencoded; charset=UTF-8'
     end
     opts[:path] = path
     opts[:auth] = @options[:auth] if @options[:auth]
